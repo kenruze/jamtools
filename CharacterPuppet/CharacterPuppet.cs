@@ -23,6 +23,8 @@ namespace JamTools
 		public float gravity = 9.8f;
 		public float jumpStrength = 4;
 		public float stepHeight = 0.02f;
+		[Range(0,1)]
+		public float groundedSlopeThreshold = 0.75f;
 
 		[Header ("Exposed")]
 		public bool grounded;
@@ -115,14 +117,16 @@ namespace JamTools
 				animator.SetFloat (walkingAnimatorPropName, mag);
 			}
 
-			float castRadius = capsule.radius - 0.1f;
+			float castRadius = capsule.radius;
 			RaycastHit[] hits = Physics.SphereCastAll (transform.position + Vector3.up * capsule.height / 2, castRadius, Vector3.down, capsule.height / 2 - castRadius + 0.02f, groundCollisionMask);
 			for (int i = 0; i < hits.Length; i++) {
 				if (hits [i].collider == capsule)
 					continue;
 				if (hits [i].collider.isTrigger)
 					continue;
-
+				if ((1-hits [i].normal.y) >= groundedSlopeThreshold)
+					continue;
+				
 				grounded = true;
 				if (jumped) {
 					jumped = false;

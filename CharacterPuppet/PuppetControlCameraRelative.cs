@@ -49,9 +49,13 @@ namespace JamTools
                 displacement.y = 0;
                 displacement.Normalize();
                 displacement = displacement * mag;
-
-                characterPuppet.movementInput = displacement;
             }
+            else
+            {
+                displacement = Vector3.zero;
+            }
+            characterPuppet.movementInput = displacement;
+
 
             if (characterPuppet.grounded)
             {
