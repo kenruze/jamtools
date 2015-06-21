@@ -19,7 +19,7 @@ public class WorldArea : MonoBehaviour
     //public Camera m_cam;
     public List<GameObject> contents = new List<GameObject>();
     public List<GameObject> triggerTargets = new List<GameObject>();
-    bool startingArea;
+    public bool startingArea;
     int countInside;
 
     void Start()

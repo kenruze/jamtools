@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+
 //using UnityEngine.UI;
 
 public class Geometry
@@ -40,6 +41,14 @@ public class InterpolatedValue
         value = Mathf.SmoothDamp(value, target, ref velocityRef, smoothTime);
         return value;
     }
+
+    public float InterpolateStep(float target, float smoothTime = -1)
+    {
+        if (smoothTime < 0)
+            smoothTime = this.smoothTime;
+        value = Mathf.SmoothDamp(value, target, ref velocityRef, smoothTime);
+        return value;
+    }
 }
 
 public class InterpolatedVector
@@ -62,6 +71,14 @@ public class InterpolatedVector
         value = Vector3.SmoothDamp(value, target, ref velocityRef, smoothTime);
         return value;
     }
+
+    public Vector3 InterpolateStep(Vector3 target, float smoothTime = -1)
+    {
+        if (smoothTime < 0)
+            smoothTime = this.smoothTime;
+        value = Vector3.SmoothDamp(value, target, ref velocityRef, smoothTime);
+        return value;
+    }
 }
 
 public class TimerValue
@@ -69,6 +86,7 @@ public class TimerValue
     public float value;
     public float max;
     public bool autoReset;
+    public bool carryTickRemainder = true;
 
     public TimerValue(float initMax, bool autoResetting = true)
     {
@@ -94,7 +112,7 @@ public class TimerValue
         {
             if (autoReset)
             {
-                value = max;
+                value = max + (carryTickRemainder ? value : 0);
             }
             return true;
         }
