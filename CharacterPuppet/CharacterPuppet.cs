@@ -14,6 +14,8 @@ namespace JamTools
         [Tooltip("leave this string blank if your animator doesn't use it")]
         public string jumpAnimatorStateName = "jump";
         [Tooltip("leave this string blank if your animator doesn't use it")]
+        public string fallingAnimatorStateName = "fall";
+        [Tooltip("leave this string blank if your animator doesn't use it")]
         public string landAnimatorStateName = "land";
         public Rigidbody body;
         public CapsuleCollider capsule;
@@ -24,10 +26,10 @@ namespace JamTools
         public LayerMask groundCollisionMask = ~0;
         public float movementSpeed = 10;
         public float rotationSpeed = 720;
-        public float gravity = 9.8f;
+        public float gravity = 50;
         public float terminalVelocity = 100;
         // units per second
-        public float jumpStrength = 4;
+        public float jumpStrength = 16;
         public float jumpDelay = 0;
         public float stepHeight = 0.02f;
         [Range(0, 1)]
@@ -38,6 +40,7 @@ namespace JamTools
         [Header("Exposed")]
         public bool grounded;
         public bool jumped;
+        public bool falling;
         public Vector3 velocity;
         public Vector3 movementInput;
         public Vector3? walkTarget;
@@ -48,6 +51,8 @@ namespace JamTools
         public float movementThrottle = 1;
         public float rotationThrottle = 1;
         public bool waitingOnJumpDelay;
+        public float startFallingDelay = 0.2f;
+        public float startFallingTimer;
 
         void Start()
         {
@@ -140,35 +145,51 @@ namespace JamTools
             }
 
             float castRadius = capsule.radius - 0.01f;
-            RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up * capsule.height / 2, castRadius, Vector3.down, capsule.height / 2 - castRadius + 0.02f, groundCollisionMask);
-            for (int i = 0; i < hits.Length; i++)
+            float castHeight = castRadius;
+
+            if (velocity.y < 0.01f)
             {
-                if (hits[i].collider == capsule)
-                    continue;
-                if (hits[i].collider.isTrigger)
-                    continue;
-                if ((1 - hits[i].normal.y) > groundedSlopeThreshold)
-                    continue;//could develop sliding response
-				
-                grounded = true;
-                if (jumped)
+                //RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up * capsule.height / 2, castRadius, Vector3.down, capsule.height / 2 - castRadius + 0.02f, groundCollisionMask);
+                //try casting from the base instead of the midpoint
+                RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up * castHeight, castRadius, Vector3.down, castHeight - castRadius + 0.02f, groundCollisionMask);
+                for (int i = 0; i < hits.Length; i++)
                 {
-                    jumped = false;
-                    SendMessage("Land");
-                }
-                float disparity = capsule.height / 2 - castRadius - hits[i].distance;
-                if (disparity > 0 - stepHeight)
-                {
-                    //velocity.y += (disparity + stepHeight);
-                    float tinyAmount = 0.001f;
-                    transform.position += Vector3.up * (disparity + stepHeight - tinyAmount);
-                    break;
+                    if (hits[i].collider == capsule)
+                        continue;
+                    if (hits[i].collider.isTrigger)
+                        continue;
+                    if ((1 - hits[i].normal.y) > groundedSlopeThreshold)
+                        continue;//could develop sliding response
+
+                    grounded = true;
+                    if (jumped || falling)
+                    {
+                        jumped = false;
+                        falling = false;
+                        SendMessage("Land");
+                    }
+                    float disparity = castHeight - castRadius - hits[i].distance;
+                    if (disparity > 0 - stepHeight)
+                    {
+                        //velocity.y += (disparity + stepHeight);
+                        float tinyAmount = 0.001f;
+                        transform.position += Vector3.up * (disparity + stepHeight - tinyAmount);
+                        break;
+                    }
                 }
             }
-
             //█physics
             if (!grounded && !wasgrounded)
             {
+                if (startFallingTimer > 0 && !jumped)
+                {
+                    startFallingTimer -= Time.deltaTime;
+                    if (startFallingTimer <= 0)
+                    {
+                        falling = true;
+                        animator.CrossFade(fallingAnimatorStateName, 0.2f);
+                    }
+                }
                 velocity.y -= gravity * Time.deltaTime;
                 if (velocity.y < -terminalVelocity)
                     velocity.y = -terminalVelocity;
@@ -176,6 +197,7 @@ namespace JamTools
             else
             {
                 velocity.y *= 0.5f;
+                startFallingTimer = startFallingDelay;
             }
 
             body.transform.rotation = Quaternion.RotateTowards(body.transform.rotation, rotationTarget, rotationSpeed * Time.deltaTime);
@@ -226,10 +248,8 @@ namespace JamTools
 
         public override void Jump()
         {
-            if (waitingOnJumpDelay)
-                return;
-            waitingOnJumpDelay = true;
-            StartCoroutine(JumpAction(jumpDelay));
+                waitingOnJumpDelay = true;
+                StartCoroutine(JumpAction(jumpDelay));
         }
 
         public override void MoveInput(Vector3 direction)
@@ -329,7 +349,8 @@ namespace JamTools
             {
                 body = gameObject.AddComponent<Rigidbody>();
             }
-            body.constraints = RigidbodyConstraints.FreezeRotation; 
+            body.constraints = RigidbodyConstraints.FreezeRotation;
+            body.useGravity = false;
             capsule = GetComponentInChildren<CapsuleCollider>();
             if (capsule == null)
             {
@@ -338,6 +359,9 @@ namespace JamTools
             capsule.height = 2;
             capsule.radius = 0.5f;
             capsule.center = Vector3.up;
+
+            builtInInputMode = BuiltInInputMode.DefaultCameraRelative;
+            print("setting puppet control to built in default camera relative");
         }
     }
 
