@@ -39,11 +39,15 @@ public class CreateAssets
             Debug.Log(fileClassName);
 
         }
-
-        string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + (path.Contains("Editor") ? "/" : "/Editor/") + fileClassName + ".cs");
-        Debug.Log("write file " + assetPathAndName + " " + selectedFileName);
-        File.WriteAllText(assetPathAndName, InspectorText(selectedFileName));
+		path += (path.Contains ("Editor") ? "/" : "/Editor/") + fileClassName + ".cs";
+        //string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + fileClassName + ".cs");
+		Debug.Log("write file " + path);
+		System.IO.FileInfo file = new System.IO.FileInfo(path);
+		AssetDatabase.Refresh ();
+		file.Directory.Create(); // If the directory already exists, this method does nothing.
+		File.WriteAllText(file.FullName, InspectorText(selectedFileName));
         AssetDatabase.SaveAssets();
+		AssetDatabase.Refresh ();
         EditorUtility.FocusProjectWindow();
     }
 
