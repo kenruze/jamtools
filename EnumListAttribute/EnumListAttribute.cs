@@ -5,6 +5,8 @@ using System.Collections.Generic;
 public class EnumListAttribute : PropertyAttribute
 {
     System.Type E;
+    public System.Type Enum{get {return E;}}
+
     List<string> valueNames = new List<string>();
 
     public EnumListAttribute(System.Type T)
