@@ -5,8 +5,16 @@ public static class JamExtensions
 {
     public static Camera Lerp(this Camera source, Camera target, float t)
     {
-        source.transform.rotation = Quaternion.Lerp(source.transform.rotation, target.transform.rotation, t);
-        source.transform.position = Vector3.Lerp(source.transform.position, target.transform.position, t);
+		if (t == 1)
+		{
+			source.transform.rotation = target.transform.rotation;
+			source.transform.position = target.transform.position;
+		}
+		else
+		{
+			source.transform.rotation = Quaternion.Lerp (source.transform.rotation, target.transform.rotation, t);
+			source.transform.position = Vector3.Lerp (source.transform.position, target.transform.position, t);
+		}
         source.LerpNoTransform(target, t);
         return source;
     }

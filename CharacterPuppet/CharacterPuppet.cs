@@ -12,11 +12,14 @@ namespace JamTools
         [Tooltip("leave this string blank if your animator doesn't use it")]
         public string lateralAnimatorPropName = "lateral";
         [Tooltip("leave this string blank if your animator doesn't use it")]
-        public string jumpAnimatorStateName = "jump";
+		[UnityEngine.Serialization.FormerlySerializedAs("jumpAnimatorStateName")]
+        public string jumpTriggerName = "jump";
         [Tooltip("leave this string blank if your animator doesn't use it")]
-        public string fallingAnimatorStateName = "fall";
+		[UnityEngine.Serialization.FormerlySerializedAs("fallingAnimatorStateName")]
+		public string fallingTriggerName = "fall";
         [Tooltip("leave this string blank if your animator doesn't use it")]
-        public string landAnimatorStateName = "land";
+		[UnityEngine.Serialization.FormerlySerializedAs("landAnimatorStateName")]
+		public string landTriggereName = "land";
         public Rigidbody body;
         public CapsuleCollider capsule;
 
@@ -53,6 +56,8 @@ namespace JamTools
         public bool waitingOnJumpDelay;
         public float startFallingDelay = 0.2f;
         public float startFallingTimer;
+
+        public bool takingRootMotion;
 
         void Start()
         {
@@ -184,10 +189,10 @@ namespace JamTools
                 if (startFallingTimer > 0 && !jumped)
                 {
                     startFallingTimer -= Time.deltaTime;
-                    if (startFallingTimer <= 0)
+					if (startFallingTimer <= 0 && fallingTriggerName!=null)
                     {
                         falling = true;
-                        animator.CrossFade(fallingAnimatorStateName, 0.2f);
+						animator.SetTrigger(fallingTriggerName);
                     }
                 }
                 velocity.y -= gravity * Time.deltaTime;
@@ -200,15 +205,21 @@ namespace JamTools
                 startFallingTimer = startFallingDelay;
             }
 
-            body.transform.rotation = Quaternion.RotateTowards(body.transform.rotation, rotationTarget, rotationSpeed * Time.deltaTime);
-            body.velocity = velocity;
+			body.transform.rotation = Quaternion.RotateTowards(body.transform.rotation, rotationTarget, rotationThrottle * rotationSpeed * Time.deltaTime);
+            if (takingRootMotion)
+            { 
+                velocity.y = 0;
+                body.velocity += velocity;
+            }
+            else
+                body.velocity = velocity;
         }
 
         public void Land()
         {
-            if (animator != null && landAnimatorStateName != "")
+			if (animator != null && landTriggereName != "")
             {
-                animator.Play(landAnimatorStateName, 0, 0);
+				animator.SetTrigger(landTriggereName);
             }
         }
 
@@ -220,9 +231,9 @@ namespace JamTools
 
         IEnumerator JumpAction(float jumpDelay)
         {
-            if (animator != null && jumpAnimatorStateName != "")
+            if (animator != null && jumpTriggerName != "")
             {
-                animator.Play(jumpAnimatorStateName, 0, 0);
+				animator.SetTrigger(jumpTriggerName);
             }
             yield return new WaitForSeconds(jumpDelay);
             transform.position += Vector3.up * (stepHeight);
