@@ -63,7 +63,8 @@ namespace JamTools
 						var pos = animator.transform.position + animator.transform.rotation * queues [i].localPosition;
 						var parent = queues [i].passParent ? animator.transform : null;
 						EffectOutlet.Get.PlayEffect (queues [i].effect, pos, animator.transform.rotation, parent);
-						Debug.Log ("fired effect");
+                        if(EffectOutlet.Get.logsOn)
+                            Debug.Log ("fired effect");
 					}
 					queues [i].fired = true;
 				}
