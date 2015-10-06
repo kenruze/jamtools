@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using JamTools;
@@ -26,6 +25,14 @@ public class CameraTrack : MonoBehaviour
     {
         CameraTrack oldCamera = s_currentCamera;
         s_occupiedCameraZones.Sort(new CompareCameraTrackPriority());
+        for (int i = 0; i < s_occupiedCameraZones.Count; i++)
+        {
+            if (s_occupiedCameraZones[i] == null)
+            {
+                s_occupiedCameraZones.RemoveAt(i);
+                --i;
+            }
+        }
 
         if (debug_messages)
         {
@@ -180,6 +187,7 @@ public class CameraTrack : MonoBehaviour
 
     public void ActivateCamera()
     {
+        //Debug.Log("Activating Camera " + name);
         s_currentCamera = this;
         m_activated = true;
     }
@@ -191,14 +199,15 @@ public class CameraTrack : MonoBehaviour
         if (other.gameObject == m_target)
         {
             triggerClicks++;
-            if (triggerClicks > 0)
-            {
+            //if (triggerClicks > 0)
+            //{
                 if (!s_occupiedCameraZones.Contains(this))
                 {
                     s_occupiedCameraZones.Add(this);
-                    SortCameraZones();
                 }
-            }
+            SortCameraZones();
+
+            //}
         }
     }
 
@@ -210,8 +219,8 @@ public class CameraTrack : MonoBehaviour
             if (triggerClicks <= 0)
             {
                 s_occupiedCameraZones.Remove(this);
-                SortCameraZones();
             }
+            SortCameraZones();
         }
     }
 

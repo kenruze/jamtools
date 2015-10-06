@@ -1,4 +1,4 @@
-﻿//#define JamToolsUseInControl
+﻿#define JamToolsUseInControl
 
 
 using UnityEngine;
@@ -47,7 +47,8 @@ namespace JamTools
         public TouchButtonPad touchButtonPad;
 
         #if JamToolsUseInControl
-        InputDevice inputDevice;
+		InputDevice inputDevice;
+		InputDevice touchDevice;
         #endif
 
         //touch only
@@ -108,23 +109,27 @@ namespace JamTools
                 case InputMode.Any:
                     bool jumpedForAnother = false;
                     displacement = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-                    inputDevice = InputManager.Devices[playerNumber];
-                    if (displacement.magnitude < 0.1f)
+                    if(InputManager.Devices.Count>playerNumber)
                     {
-                        displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        inputDevice = InputManager.Devices[playerNumber];
+                        if (displacement.magnitude < 0.1f)
+                        {
+                            displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        }
+                        if (inputDevice.Action1.WasPressed && !jumpedForAnother)
+                        {
+                            puppetAbilities.Jump();  
+                            jumpedForAnother = true;
+                        }
                     }
-                    if (inputDevice.Action1.WasPressed && !jumpedForAnother)
-                    {
-                        puppetAbilities.Jump();  
-                        jumpedForAnother = true;
-                    }
-                    
-                    inputDevice = TouchManager.Device;
-                    if (displacement.magnitude < 0.1f)
-                    {
-                        displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
-                    }
-                    
+					touchDevice = TouchManager.Device;
+					if(touchDevice!=null)
+					{
+	                    if (displacement.magnitude < 0.1f)
+	                    {
+							displacement = new Vector3(touchDevice.Direction.X, 0, touchDevice.Direction.Y);
+	                    }
+					}   
                     if (Input.GetButtonDown("Jump"))
                         puppetAbilities.Jump();
 
@@ -132,7 +137,6 @@ namespace JamTools
                                                                        
                     break;
             }
-
             if (inputMode == InputMode.InControlTouchAnalogue || inputMode == InputMode.Any)
             {
                 touchButtonPad.UpdateTouchButtonPad();
@@ -150,7 +154,9 @@ namespace JamTools
                 Vector3 flatcamforward = cam.transform.forward;
                 flatcamforward.y = 0;
                 flatcamforward.Normalize();
-                Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
+                //possible bug fix. keep an eye out for drawbacks
+                //Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
+                Quaternion camToCharacterSpace = Quaternion.LookRotation(flatcamforward);
                 if (CameraTrack.s_currentCamera != null && CameraTrack.s_currentCamera.constrainZ != CameraTrackConstrainZ.Off)
                 {
                     switch (CameraTrack.s_currentCamera.constrainZ)
@@ -187,6 +193,7 @@ namespace JamTools
                 {
                     displacement = (camToCharacterSpace * displacement);
                 }
+                //Debug.Log(displacement);
             }
             else
             {
