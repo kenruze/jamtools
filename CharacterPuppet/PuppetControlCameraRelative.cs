@@ -1,4 +1,4 @@
-#define JamToolsUseInControl
+//#define JamToolsUseInControl
 
 
 using UnityEngine;
@@ -187,36 +187,37 @@ namespace JamTools
                 //Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
                 Quaternion camToCharacterSpace = Quaternion.LookRotation(flatcamforward);
                 if (CameraTrack.s_currentCamera != null && CameraTrack.s_currentCamera.constrainZ != CameraTrackConstrainZ.Off)
-                {
-                    case CameraTrackConstrainZ.Project:
-                        displacement = (camToCharacterSpace * displacement);
-                        displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                        verticalDisplacement = displacement.y;
-                        if (trackMagnetWhenConstrained)
-                        {
-                            Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
-                            disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                            displacement -= disp;
-                        }
-                        break;
-                    case CameraTrackConstrainZ.Map:
-                        verticalDisplacement = displacement.z;
-                        displacement.z = 0;
-                        float mgnitude = displacement.magnitude;
-                        camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                        displacement = (camToCharacterSpace * displacement);
-                        displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                        displacement = displacement.normalized * mgnitude;
-                        if (trackMagnetWhenConstrained)
-                        {
-                            Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
-                            disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                            displacement -= disp;
-                        }
-                        break;
-                    case CameraTrackConstrainZ.Off:
-                        displacement = (camToCharacterSpace * displacement);
-                        break;
+				{
+					switch (CameraTrack.s_currentCamera.constrainZ)
+					{
+					case CameraTrackConstrainZ.Project:
+						displacement = (camToCharacterSpace * displacement);
+						displacement = Vector3.ProjectOnPlane (displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+						verticalDisplacement = displacement.y;
+						if (trackMagnetWhenConstrained) {
+							Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
+							disp -= Vector3.ProjectOnPlane (disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+							displacement -= disp;
+						}
+						break;
+					case CameraTrackConstrainZ.Map:
+						verticalDisplacement = displacement.z;
+						displacement.z = 0;
+						float mgnitude = displacement.magnitude;
+						camToCharacterSpace = Quaternion.FromToRotation (Vector3.forward, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+						displacement = (camToCharacterSpace * displacement);
+						displacement = Vector3.ProjectOnPlane (displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+						displacement = displacement.normalized * mgnitude;
+						if (trackMagnetWhenConstrained) {
+							Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
+							disp -= Vector3.ProjectOnPlane (disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+							displacement -= disp;
+						}
+						break;
+					case CameraTrackConstrainZ.Off:
+						displacement = (camToCharacterSpace * displacement);
+						break;
+					}
                 }
                 else
                 {
