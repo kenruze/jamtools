@@ -85,6 +85,7 @@ using System.Collections;
 using System.Reflection;
 
 [CustomEditor(typeof(" + className + @"))]
+[CanEditMultipleObjects]
 public class "+className+@"Inspector : Editor
 {
     public override void OnInspectorGUI()
@@ -95,7 +96,7 @@ public class "+className+@"Inspector : Editor
 
 		var type = typeof(" + className + @");
 		var flagsForAllFields = BindingFlags.Public |
-			BindingFlags.NonPublic |
+			//BindingFlags.NonPublic |
 			BindingFlags.Instance |
 			BindingFlags.FlattenHierarchy;
 

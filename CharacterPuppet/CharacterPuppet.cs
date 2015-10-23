@@ -59,6 +59,18 @@ namespace JamTools
 
         public bool takingRootMotion;
 
+
+        bool rotationSetThisFrame;
+        public Quaternion RotationTarget
+        {
+            get{ return rotationTarget;}
+            set
+            {
+                rotationTarget = value;
+                rotationSetThisFrame = true;
+            }
+        }
+
         void Start()
         {
             rotationTarget = transform.rotation;
@@ -125,12 +137,16 @@ namespace JamTools
                 Vector3 moveStep = movementInput * movementSpeed * movementThrottle;
                 moveStep.y = velocity.y;
                 velocity = moveStep;
-                rotationTarget = Quaternion.LookRotation(movementInput);
+                if (!rotationSetThisFrame)
+                {
+                    rotationTarget = Quaternion.LookRotation(movementInput);
+                }
             }
             else if (wasgrounded)
             {
                 velocity *= Mathf.Clamp01(1 - 16 * Time.deltaTime);
             }
+            rotationSetThisFrame = false;
             float lateralAngle = Geometry.AngleAroundAxis(rotationTarget * Vector3.forward, body.transform.rotation * Vector3.forward, Vector3.up);
             if (lateralMovementPenalty > 0)
             {
@@ -189,7 +205,7 @@ namespace JamTools
                 if (startFallingTimer > 0 && !jumped)
                 {
                     startFallingTimer -= Time.deltaTime;
-					if (startFallingTimer <= 0 && fallingTriggerName!=null)
+					if (startFallingTimer <= 0 && fallingTriggerName!="")
                     {
                         falling = true;
 						animator.SetTrigger(fallingTriggerName);

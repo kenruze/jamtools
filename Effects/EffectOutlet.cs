@@ -10,7 +10,17 @@ namespace JamTools
 		//pass a reference to an EffectType asset into EffectOutlet.Get.PlayEffect
 
 		static EffectOutlet instance;
-		public static EffectOutlet Get{ get { return instance; } }
+		public static EffectOutlet Get{
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindObjectOfType<EffectOutlet>();
+                    print("searched for EffectOutlet. OK in assembly reload");
+                }
+                return instance; 
+            }
+        }
 
 		public bool logsOn = true;
 		[EnumList(typeof(EffectAudioGroupType))]
@@ -60,6 +70,13 @@ namespace JamTools
 			screenShakeCamera = FindObjectOfType<ScreenShakeCamera> ();
 		}
 
+        public void PlayEffect(EffectType effect, Transform parent = null)
+        {
+            if (parent == null)
+                parent = transform;
+            PlayEffect(effect, parent.position, parent.rotation, parent);
+        }
+
 		public void PlayEffect(EffectType effect, Vector3 position, Quaternion orientation = default(Quaternion), Transform parent = null)
 		{
 			for (int i = 0; i < effectInstancePools.Count; i++) {
@@ -74,6 +91,19 @@ namespace JamTools
 
 		IEnumerator PlayEffectTimeline(EffectType effect, Vector3 position, Quaternion orientation = default(Quaternion), Transform parent = null, EffectInstancePool pool = null)
 		{
+            if (effect.audioGroupType == EffectAudioGroupType.Footstep)
+            {
+                FootStepZone zone = FootStepZone.GetZone(position);
+                if (zone != null)
+                {
+                    effect = zone.footstepEffect;
+                    if (zone.overridePositionY)
+                    {
+                        position.y = zone.transform.position.y;
+                    }
+                }
+            }
+
 			var frame = new WaitForEndOfFrame ();
 			bool instanceFired = effect.prefab == null;
 			bool soundFired = effect.sound == null;
@@ -99,9 +129,11 @@ namespace JamTools
 						effectInstance.transform.parent = ( !effect.allowInstanceAttachToParent || parent == null) ? transform : parent;
 						if(effect.disableLoopingParticles)
 						{
-							var particles = effectInstance.GetComponentInChildren<ParticleSystem> ();
-							if (particles != null)
-								particles.loop = false;
+							var particles = effectInstance.GetComponentsInChildren<ParticleSystem> ();
+                            for (int i = 0; i < particles.Length; i++)
+                            {
+                                particles[i].loop = false;
+                            }
 						}
 					}
 					else
@@ -184,9 +216,11 @@ namespace JamTools
 				effectClone.transform.parent = owner.transform;
 				if(effect.disableLoopingParticles)
 				{
-					var particles = effectClone.GetComponentInChildren<ParticleSystem> ();
-					if (particles != null)
-						particles.loop = false;
+                    var particles = effectClone.GetComponentsInChildren<ParticleSystem> ();
+                    for (int p = 0; p < particles.Length; p++)
+                    {
+                        particles[p].loop = false;
+                    }
 				}
 				effectClone.SetActive (false);
 				pool.pool.Add (effectClone);

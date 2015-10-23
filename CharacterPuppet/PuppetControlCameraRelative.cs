@@ -1,4 +1,4 @@
-﻿//#define JamToolsUseInControl
+﻿#define JamToolsUseInControl
 
 
 using UnityEngine;
@@ -29,8 +29,9 @@ namespace JamTools
         }
 
         public InputMode inputMode;
-        public int playerNumber = 0;
-
+        public int playerIndex = 0;
+        [Tooltip("with InControl")]
+        public bool allowDPad = true;
 
         public enum CameraTrackConstrainZ
         {
@@ -47,7 +48,8 @@ namespace JamTools
         public TouchButtonPad touchButtonPad;
 
         #if JamToolsUseInControl
-        InputDevice inputDevice;
+        internal InputDevice inputDevice;
+        InputDevice touchDevice;
         #endif
 
         //touch only
@@ -63,11 +65,12 @@ namespace JamTools
             #if JamToolsUseInControl
             switch (inputMode)
             {
-                case InputMode.InControl:            
-                    inputDevice = InputManager.Devices[playerNumber];
+                case InputMode.InControl:
+                    if(InputManager.Devices.Count>playerIndex && playerIndex>=0)
+                        inputDevice = InputManager.Devices[playerIndex];
                     break;
                 case InputMode.InControlTouchAnalogue:            
-                    inputDevice = TouchManager.Device;
+                    touchDevice = TouchManager.Device;
                     break;
             }
 
@@ -97,32 +100,50 @@ namespace JamTools
                         puppetAbilities.Jump();
                     break;
                 case InputMode.InControl:
-                    displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
-                    if (inputDevice.Action1.WasPressed)
-                        puppetAbilities.Jump();
+                    if (inputDevice == null)
+                    {
+                        //Debug.Log("no input device");
+                        if(InputManager.Devices.Count>playerIndex && playerIndex >=0)
+                            inputDevice = InputManager.Devices[playerIndex];
+                    }
+                    else
+                    {
+                        if(allowDPad)
+                            displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        else
+                            displacement = new Vector3(inputDevice.LeftStick.X, 0, inputDevice.LeftStick.Y);
+                        
+                        if (inputDevice.Action1.WasPressed)
+                            puppetAbilities.Jump();
+                    }
                     break;
                 case InputMode.InControlTouchAnalogue:
-                    inputDevice = TouchManager.Device;
-                    displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                    touchDevice = TouchManager.Device;
+                    displacement = new Vector3(touchDevice.Direction.X, 0, touchDevice.Direction.Y);
                     break;
                 case InputMode.Any:
                     bool jumpedForAnother = false;
                     displacement = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-                    inputDevice = InputManager.Devices[playerNumber];
-                    if (displacement.magnitude < 0.1f)
+                    if (InputManager.Devices.Count > playerIndex && playerIndex >=0)
                     {
-                        displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        inputDevice = InputManager.Devices[playerIndex];
+
+                        if (displacement.magnitude < 0.1f)
+                        {
+                            displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        }
+                        if (inputDevice.Action1.WasPressed && !jumpedForAnother)
+                        {
+                            puppetAbilities.Jump();  
+                            jumpedForAnother = true;
+                        }
                     }
-                    if (inputDevice.Action1.WasPressed && !jumpedForAnother)
+
+                    touchDevice = TouchManager.Device;
+
+                    if (touchDevice != null && displacement.magnitude < 0.1f)
                     {
-                        puppetAbilities.Jump();  
-                        jumpedForAnother = true;
-                    }
-                    
-                    inputDevice = TouchManager.Device;
-                    if (displacement.magnitude < 0.1f)
-                    {
-                        displacement = new Vector3(inputDevice.Direction.X, 0, inputDevice.Direction.Y);
+                        displacement = new Vector3(touchDevice.Direction.X, 0, touchDevice.Direction.Y);
                     }
                     
                     if (Input.GetButtonDown("Jump"))
@@ -143,6 +164,19 @@ namespace JamTools
                 puppetAbilities.Jump();
             #endif
 
+            if (CameraTrack.s_currentCamera != null)
+            {
+                displacement = MapInputToCamera(displacement, CameraTrack.s_currentCamera.constrainZ); 
+            }
+            else
+            {
+                displacement = MapInputToCamera(displacement, CameraTrackConstrainZ.Off); 
+            }
+            puppetAbilities.MoveInput(displacement);
+        }
+
+        public Vector3 MapInputToCamera(Vector3 displacement, CameraTrackConstrainZ constrainZ = PuppetControlCameraRelative.CameraTrackConstrainZ.Off)
+        {
             float mag = Mathf.Min(1, displacement.magnitude);
             if (mag >= 0.01f)
             {
@@ -151,50 +185,50 @@ namespace JamTools
                 flatcamforward.y = 0;
                 flatcamforward.Normalize();
                 Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
-                if (CameraTrack.s_currentCamera != null && CameraTrack.s_currentCamera.constrainZ != CameraTrackConstrainZ.Off)
+
+                switch (constrainZ)
                 {
-                    switch (CameraTrack.s_currentCamera.constrainZ)
-                    {
-                        case CameraTrackConstrainZ.Project:
-                            displacement = (camToCharacterSpace * displacement);
-                            displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                            verticalDisplacement = displacement.y;
-                            if (trackMagnetWhenConstrained)
-                            {
-                                Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
-                                disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                                displacement -= disp;
-                            }
-                            break;
-                        case CameraTrackConstrainZ.Map:
-                            verticalDisplacement = displacement.z;
-                            displacement.z = 0;
-                            float mgnitude = displacement.magnitude;
-                            camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                            displacement = (camToCharacterSpace * displacement);
-                            displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                            displacement = displacement.normalized * mgnitude;
-                            if (trackMagnetWhenConstrained)
-                            {
-                                Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
-                                disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
-                                displacement -= disp;
-                            }
-                            break;
-                    }
+                    case CameraTrackConstrainZ.Project:
+                        displacement = (camToCharacterSpace * displacement);
+                        displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+                        verticalDisplacement = displacement.y;
+                        if (trackMagnetWhenConstrained)
+                        {
+                            Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
+                            disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+                            displacement -= disp;
+                        }
+                        break;
+                    case CameraTrackConstrainZ.Map:
+                        verticalDisplacement = displacement.z;
+                        displacement.z = 0;
+                        float mgnitude = displacement.magnitude;
+                        camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+                        displacement = (camToCharacterSpace * displacement);
+                        displacement = Vector3.ProjectOnPlane(displacement, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+                        displacement = displacement.normalized * mgnitude;
+                        if (trackMagnetWhenConstrained)
+                        {
+                            Vector3 disp = puppetAbilities.transform.position - CameraTrack.s_currentCamera.m_targetTrackingBox.transform.position;
+                            disp -= Vector3.ProjectOnPlane(disp, CameraTrack.s_currentCamera.m_targetTrackingBox.transform.forward);
+                            displacement -= disp;
+                        }
+                        break;
+                    case CameraTrackConstrainZ.Off:
+                        displacement = (camToCharacterSpace * displacement);
+                        break;
                 }
-                else
-                {
-                    displacement = (camToCharacterSpace * displacement);
-                }
+
             }
             else
             {
                 displacement = Vector3.zero;
             }
-            puppetAbilities.MoveInput(displacement);
+            return displacement;
         }
+
     }
+
 
     [System.Serializable]
     public class TouchButtonPad

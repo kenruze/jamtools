@@ -19,6 +19,41 @@ public class Geometry
         // Return angle multiplied with 1 or -1
         return angle * (Vector3.Dot(axis, Vector3.Cross(dirA, dirB)) < 0 ? -1 : 1);
     }
+
+    public static Vector3 WorldPositionFromLocalOffset(Transform transform, Vector3 localPosition)
+    {
+        return (Vector3)(transform.localToWorldMatrix * localPosition) + transform.position;
+    }
+
+    public static Vector3 GetLocalOffset(Transform transform, Vector3 worldPosition)
+    {
+        return (Vector3)(transform.worldToLocalMatrix * (worldPosition- transform.position));
+    }
+
+    public static bool IsInside(BoxCollider box, Vector3 worldPosition)
+    {
+        Vector3 localOffset = GetLocalOffset(box.transform, worldPosition);
+        localOffset -= box.center;
+        if (Mathf.Abs(localOffset.x) < box.size.x/2 &&
+            Mathf.Abs(localOffset.y) < box.size.y/2 &&
+            Mathf.Abs(localOffset.z) < box.size.z/2)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsInside(SphereCollider sphere, Vector3 worldPosition)
+    {
+        Vector3 localOffset = GetLocalOffset(sphere.transform, worldPosition);
+        localOffset -= sphere.center;
+        if (localOffset.magnitude < sphere.radius)
+        {
+            return true;
+        }
+        return false;
+    }
+
 }
 
 public class InterpolatedValue
