@@ -1,4 +1,4 @@
-﻿#define JamToolsUseInControl
+#define JamToolsUseInControl
 
 
 using UnityEngine;
@@ -153,7 +153,6 @@ namespace JamTools
                                                                        
                     break;
             }
-
             if (inputMode == InputMode.InControlTouchAnalogue || inputMode == InputMode.Any)
             {
                 touchButtonPad.UpdateTouchButtonPad();
@@ -184,9 +183,10 @@ namespace JamTools
                 Vector3 flatcamforward = cam.transform.forward;
                 flatcamforward.y = 0;
                 flatcamforward.Normalize();
-                Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
-
-                switch (constrainZ)
+                //possible bug fix. keep an eye out for drawbacks
+                //Quaternion camToCharacterSpace = Quaternion.FromToRotation(Vector3.forward, flatcamforward);
+                Quaternion camToCharacterSpace = Quaternion.LookRotation(flatcamforward);
+                if (CameraTrack.s_currentCamera != null && CameraTrack.s_currentCamera.constrainZ != CameraTrackConstrainZ.Off)
                 {
                     case CameraTrackConstrainZ.Project:
                         displacement = (camToCharacterSpace * displacement);
@@ -218,7 +218,11 @@ namespace JamTools
                         displacement = (camToCharacterSpace * displacement);
                         break;
                 }
-
+                else
+                {
+                    displacement = (camToCharacterSpace * displacement);
+                }
+                //Debug.Log(displacement);
             }
             else
             {
