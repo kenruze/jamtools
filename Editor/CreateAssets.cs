@@ -5,10 +5,80 @@ using System.IO;
 
 public class CreateAssets
 {
+    [MenuItem("Assets/Create/Singleton Script")]
+    public static void CreateSpecialScript()
+    {
+        string path = EditorUtility.SaveFilePanelInProject("Create Singleton", "Singleton", "cs", "Please select file name to save:");
+        if (!string.IsNullOrEmpty(path))
+        {
+            Debug.Log("write file " + path);
+            System.IO.FileInfo file = new System.IO.FileInfo(path);
+            AssetDatabase.Refresh ();
+            file.Directory.Create(); // If the directory already exists, this method does nothing.
+            string className = file.Name;
+            className = className.Substring(0,className.IndexOf("."));
+            Debug.Log(className);
+            File.WriteAllText(file.FullName, SingletonText(className));
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh ();
+            EditorUtility.FocusProjectWindow();
+        }
+    }
+
+    [MenuItem("Assets/Create/Data Asset Type")]
+    public static void CreateDataAssetType()
+    {
+        string path = AssetDatabase.GetAssetPath(Selection.activeObject);
+        if(path == "")
+        {
+            path = "Assets";
+        }
+        path = EditorUtility.SaveFilePanel("Create Data Asset Type", path, "DataAssetType", "cs");
+        if (!string.IsNullOrEmpty(path))
+        {
+            Debug.Log("write file " + path);
+            System.IO.FileInfo file = new System.IO.FileInfo(path);
+            AssetDatabase.Refresh ();
+            file.Directory.Create(); // If the directory already exists, this method does nothing.
+            string className = file.Name;
+            className = className.Substring(0,className.IndexOf("."));
+            Debug.Log(className);
+            File.WriteAllText(file.FullName, DataAssetTypeText(className, className+"Data"));
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh ();
+            EditorUtility.FocusProjectWindow();
+        }
+    }
+
+//    [MenuItem("Assets/Create/AnimatorController")]
+//    public static void CreateAnimatorController()
+//    {
+//        UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath ("Assets/animator.controller");
+//    }
+
     [MenuItem("Assets/Create/EmptyAsset")]
     public static void CreateEmptyAsset()
     {
+        //try to assign scriptable object type
+//        MonoScript script = null;
+//        Type scriptableType = null;
+//        if (Selection.activeObject != null && Selection.activeObject is MonoScript)
+//        {   
+//            script = Selection.activeObject as MonoScript;
+//
+//            Debug.Log("selection is type " + script.GetClass());
+//            if(script.GetClass() is ScriptableObject)
+//            {
+//                scriptableType = script.GetClass();
+//                CustomAssetUtility.CreateAsset<scriptableType>();//can't use template with varriable
+//            }
+//        }
         CustomAssetUtility.CreateAsset<ScriptableObject>();
+//        if (Selection.activeObject != null)
+//        {
+//            Debug.Log(Selection.activeObject.GetType());
+//            var scriptable = Selection.activeObject as ScriptableObject;
+//        }
     }
 
     [MenuItem("Assets/Create/Inspector")]
@@ -88,11 +158,14 @@ using System.Reflection;
 [CanEditMultipleObjects]
 public class "+className+@"Inspector : Editor
 {
+    bool showHidden= false;
+
     public override void OnInspectorGUI()
     {
 		var target"+className+@" = target as " + className + @";
 		serializedObject.Update ();
 		GUI.changed = false;
+        bool hidableFields = false;
 
 		var type = typeof(" + className + @");
 		var flagsForAllFields = BindingFlags.Public |
@@ -111,7 +184,13 @@ public class "+className+@"Inspector : Editor
 				EnumListGUI(serializedObject, field.Name, enumListAttribute.Enum);
 				break;
 			}
-			if(!skip)
+            if (field.GetCustomAttributes(typeof(HideInCustomInspectorAttribute), false).Length > 0)
+            {
+                hidableFields = true;
+                if(!showHidden)
+                    skip = true;
+            }
+            if(!skip)
 				EditorGUILayout.PropertyField (serializedObject.FindProperty (field.Name),true);
 		}
 
@@ -126,6 +205,10 @@ public class "+className+@"Inspector : Editor
 				}
 			}
 		}
+        if (hidableFields)
+        {
+            showHidden = GUILayout.Toggle(showHidden, ""Show Hidden Fields"");
+        }
 
 		if (GUI.changed)
 		{
@@ -154,4 +237,61 @@ public class "+className+@"Inspector : Editor
 	}
 }";
 	}
+
+    public static string SingletonText(string className)
+    {
+        return@"
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+//using JamTools;
+//using InControl;
+//using UnityEngine.UI;
+
+public class "+className+@" : MonoBehaviour
+{
+    static "+className+@" instance;
+    //
+    public static "+className+@" Get
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<"+className+@">();
+                print(""searched for "+className+@", OK in assembly reload"");
+                //should be able to create from resource name
+                //if (s_instance == null)
+                //{
+                //    GameObject prefab = Resources.Load<GameObject>("""+className+@""");
+                //    s_instance = Instantiate<GameObject>(prefab).GetComponent<"+className+@">();
+                //}
+            }
+            return instance;
+        }
+    }
+    void Awake()
+    {
+        instance = this;
+    }
+}";
+    }
+
+    public static string DataAssetTypeText(string className, string subclassName)
+    {
+    return@"using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class "+className+@" : ScriptableObject
+{
+    public "+subclassName+@" data;
+}
+
+[System.Serializable]
+public class "+subclassName+@"
+{
+    //fill public data here
+}";
+    }
 }

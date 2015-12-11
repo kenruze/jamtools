@@ -36,10 +36,13 @@ public class AnimatorStateCharacterConstraints : StateMachineBehaviour
 
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
-		character.movementThrottle = 1;
-		character.rotationThrottle = 1;
-        if (useRootMotion)
-            character.takingRootMotion = false;
+        if (character != null)
+        {
+            character.movementThrottle = 1;
+            character.rotationThrottle = 1;
+            if (useRootMotion)
+                character.takingRootMotion = false;
+        }
         
     }
 

@@ -46,6 +46,8 @@ public class Align : MonoBehaviour
             orientationTargetOriginalPos = orientationAlignTarget.transform.position;
         }
     }
+
+    [ContextMenu("run align")]
     //█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
     void LateUpdate()
     {
