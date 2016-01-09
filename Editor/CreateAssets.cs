@@ -59,27 +59,27 @@ public class CreateAssets
     [MenuItem("Assets/Create/EmptyAsset")]
     public static void CreateEmptyAsset()
     {
-        //try to assign scriptable object type
-//        MonoScript script = null;
-//        Type scriptableType = null;
-//        if (Selection.activeObject != null && Selection.activeObject is MonoScript)
-//        {   
-//            script = Selection.activeObject as MonoScript;
-//
-//            Debug.Log("selection is type " + script.GetClass());
-//            if(script.GetClass() is ScriptableObject)
-//            {
-//                scriptableType = script.GetClass();
-//                CustomAssetUtility.CreateAsset<scriptableType>();//can't use template with varriable
-//            }
-//        }
+        //this can be done really simply by adding [CreateAssetMenu] to a scriptable object now
         CustomAssetUtility.CreateAsset<ScriptableObject>();
-//        if (Selection.activeObject != null)
-//        {
-//            Debug.Log(Selection.activeObject.GetType());
-//            var scriptable = Selection.activeObject as ScriptableObject;
-//        }
     }
+
+    [MenuItem("Assets/Create/New Object Of Type")]
+    public static void CreateNewObjectOfType()
+    {
+        MonoScript script = Selection.activeObject as MonoScript;
+        if (script != null)
+        {
+            var gameObject = new GameObject();
+            gameObject.name = script.name;
+            gameObject.AddComponent(script.GetClass());
+            Undo.RegisterCreatedObjectUndo(gameObject, "Create new object of type");
+            Selection.activeObject = gameObject;
+        }
+        else
+            Debug.Log("no monobehaviour selected");
+    }
+
+
 
     [MenuItem("Assets/Create/Inspector")]
     public static void CreateInspector()
@@ -283,6 +283,7 @@ public class "+className+@" : MonoBehaviour
 using System.Collections;
 using System.Collections.Generic;
 
+[CreateAssetMenu]
 public class "+className+@" : ScriptableObject
 {
     public "+subclassName+@" data;

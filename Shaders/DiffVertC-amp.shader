@@ -83,12 +83,6 @@ float4 color : COLOR;
 
 			void vert (inout appdata_full v, out Input o) {
 UNITY_INITIALIZE_OUTPUT(Input,o);
-float4 VertexOutputMaster0_0_NoInput = float4(0,0,0,0);
-float4 VertexOutputMaster0_1_NoInput = float4(0,0,0,0);
-float4 VertexOutputMaster0_2_NoInput = float4(0,0,0,0);
-float4 VertexOutputMaster0_3_NoInput = float4(0,0,0,0);
-
-
 			}
 			
 
@@ -105,13 +99,6 @@ float4 Sampled2D0=tex2D(_MainTex,IN.uv_MainTex.xy);
 float4 Multiply1=Sampled2D0 * IN.color;
 float4 Multiply4=_Color * Multiply1;
 float4 Multiply3=_amp.xxxx * Multiply4;
-float4 Master0_1_NoInput = float4(0,0,1,1);
-float4 Master0_2_NoInput = float4(0,0,0,0);
-float4 Master0_3_NoInput = float4(0,0,0,0);
-float4 Master0_4_NoInput = float4(0,0,0,0);
-float4 Master0_5_NoInput = float4(1,1,1,1);
-float4 Master0_7_NoInput = float4(0,0,0,0);
-float4 Master0_6_NoInput = float4(1,1,1,1);
 o.Albedo = Multiply3;
 
 				o.Normal = normalize(o.Normal);

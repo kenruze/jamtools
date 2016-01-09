@@ -9,7 +9,8 @@ public class GenerateBlendShapeValue:GenerateComponent
     public float min;
     public float max = 1;
 
-    bool useValueFromParent;
+    [HideInInspector]
+    public bool useValueFromParent;
 
     [Header("exposed")]
     [Tooltip("you could assign this to a target on another object")]

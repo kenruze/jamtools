@@ -17,6 +17,7 @@ public class CompareCameraTrackPriority : IComparer<CameraTrack>
 public class CameraTrack : MonoBehaviour
 {
     static bool debug_messages = false;
+    public string targetName = "CameraTrackTarget";
 
     public static CameraTrack s_currentCamera;
     public static List<CameraTrack> s_occupiedCameraZones = new List<CameraTrack>();
@@ -106,8 +107,10 @@ public class CameraTrack : MonoBehaviour
     static Vector3 positionRef;
     static float fovRef;
 
-    void Start()
+    void Awake()
     {
+        if (m_target == null)
+            m_target = GameObject.Find(targetName);
     }
     //█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
     void Update()
@@ -128,6 +131,9 @@ public class CameraTrack : MonoBehaviour
 
     void MapUpdate()
     {
+        if (m_cam == null)
+            m_cam = Camera.main;
+        
         Vector3 lastCameraPos = m_cam.transform.position;
         Vector3 trackPosition = m_target.transform.position;
         if (targetBody != null)
@@ -324,6 +330,6 @@ public class CameraTrack : MonoBehaviour
             cameraLerpTarget.LerpNoTransform(targetCam, 1);
         }
         if (m_target == null)
-            m_target = GameObject.Find("CamTrackingTarget");
+            m_target = GameObject.Find(targetName);
     }
 }
