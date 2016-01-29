@@ -6,7 +6,7 @@ using System.IO;
 public class CreateAssets
 {
     [MenuItem("Assets/Create/Singleton Script")]
-    public static void CreateSpecialScript()
+    public static void CreateSingletonScript()
     {
         string path = EditorUtility.SaveFilePanelInProject("Create Singleton", "Singleton", "cs", "Please select file name to save:");
         if (!string.IsNullOrEmpty(path))
@@ -98,15 +98,15 @@ public class CreateAssets
         }
         else if(Path.GetExtension(path) != "")
         {
-            Debug.Log(path);
+            //Debug.Log(path);
             selectedFileName = Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject));
-            Debug.Log(selectedFileName);
+            //Debug.Log(selectedFileName);
             path = path.Replace(selectedFileName, "");
-            Debug.Log(path);
+            //Debug.Log(path);
             selectedFileName = selectedFileName.Substring(0, selectedFileName.IndexOf("."));
-            Debug.Log(selectedFileName);
+            //Debug.Log(selectedFileName);
             fileClassName = selectedFileName + "Inspector";
-            Debug.Log(fileClassName);
+            //Debug.Log(fileClassName);
 
         }
 		path += (path.Contains ("Editor") ? "/" : "/Editor/") + fileClassName + ".cs";
