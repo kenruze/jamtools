@@ -29,6 +29,14 @@ class RenderSettingsComponentInspector : Editor
         UnityEngine.RenderSettings.fogEndDistance = myTarget.linearFogEnd;
 
         UnityEngine.RenderSettings.ambientLight = myTarget.ambientLight;
+
+        RenderSettings.ambientEquatorColor = myTarget.ambientEquatorColor;
+        RenderSettings.ambientGroundColor=myTarget.ambientGroundColor;
+        RenderSettings.ambientIntensity=myTarget.ambientIntensity;
+        RenderSettings.ambientMode=myTarget.ambientMode;
+        RenderSettings.ambientProbe=myTarget.ambientProbe;
+        RenderSettings.ambientSkyColor=myTarget.ambientSkyColor;
+
         UnityEngine.RenderSettings.skybox = myTarget.skyboxMaterial;
 
         UnityEngine.RenderSettings.haloStrength = myTarget.haloStrength;
@@ -49,6 +57,12 @@ class RenderSettingsComponentInspector : Editor
         myTarget.linearFogEnd=UnityEngine.RenderSettings.fogEndDistance;
 
         myTarget.ambientLight=UnityEngine.RenderSettings.ambientLight;
+        myTarget.ambientEquatorColor=RenderSettings.ambientEquatorColor;
+        myTarget.ambientGroundColor = RenderSettings.ambientGroundColor;
+        myTarget.ambientIntensity = RenderSettings.ambientIntensity;
+        myTarget.ambientMode = RenderSettings.ambientMode;
+        myTarget.ambientProbe = RenderSettings.ambientProbe;
+        myTarget.ambientSkyColor = RenderSettings.ambientSkyColor;
         myTarget.skyboxMaterial=UnityEngine.RenderSettings.skybox;
 
         myTarget.haloStrength=UnityEngine.RenderSettings.haloStrength;

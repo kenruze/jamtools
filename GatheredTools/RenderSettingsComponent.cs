@@ -14,6 +14,14 @@ public class RenderSettingsComponent : MonoBehaviour {
     public float linearFogEnd = 300.0f;
 
     public Color ambientLight = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+    public Color ambientEquatorColor;
+    public Color ambientGroundColor;
+    public float ambientIntensity;
+    public UnityEngine.Rendering.AmbientMode ambientMode;
+    public UnityEngine.Rendering.SphericalHarmonicsL2 ambientProbe;
+    public Color ambientSkyColor;
+
+
     public Material skyboxMaterial;
 
     public float haloStrength = 0.5f;
@@ -29,7 +37,14 @@ public class RenderSettingsComponent : MonoBehaviour {
         RenderSettings.fogStartDistance = linearFogStart;
         RenderSettings.fogEndDistance = linearFogEnd;
 
+        RenderSettings.ambientEquatorColor = ambientEquatorColor;
+        RenderSettings.ambientGroundColor=ambientGroundColor;
+        RenderSettings.ambientIntensity=ambientIntensity;
         RenderSettings.ambientLight = ambientLight;
+        RenderSettings.ambientMode=ambientMode;
+        RenderSettings.ambientProbe=ambientProbe;
+        RenderSettings.ambientSkyColor=ambientSkyColor;
+
         RenderSettings.skybox = skyboxMaterial;
 
         RenderSettings.haloStrength = haloStrength;
